@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+# inference.py  ← MUST be in project root (not a subfolder)
+#
+# LLM-powered baseline agent for ResumeEnv.
+# Uses OpenAI-compatible client — works with OpenAI, Together, Groq, Ollama, vLLM etc.
+#
+# Environment variables:
+#   OPENAI_API_KEY   — your API key (required)
+#   API_BASE_URL     — base URL (default: https://api.openai.com/v1)
+#   MODEL_NAME       — model to use  (default: gpt-4o-mini)
+#   ENV_BASE_URL     — running ResumeEnv server (default: http://localhost:8000)
+#
+# Usage:
+#   python inference.py
+
+import asyncio
+import json
+import os
+import re
+
+from openai import OpenAI
+
+from client import ResumeEnv
+from models import ResumeAction
+
+# ── Config from environment variables ────────────────────────────────────────
+API_KEY      = os.environ.get("OPENAI_API_KEY", "")
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME   = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:8000")
+
+
+def llm(prompt: str) -> str:
+    """Single LLM call using OpenAI-compatible client."""
+    client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
+    resp = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=512,
+        temperature=0.0,
+    )
+    return resp.choices[0].message.content.strip()
+
+
+def _parse_json(raw: str) -> dict:
+    """Strip markdown fences and parse JSON safely."""
+    clean = re.sub(r"```json|```", "", raw).strip()
+    return json.loads(clean)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Task 1 — Keyword Extraction
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def run_task1(seed: int = 42) -> float:
+    print("\n── Task 1: Keyword Extraction ──")
+    async with ResumeEnv(base_url=ENV_BASE_URL) as env:
+        result = await env.reset(task_id="task1_keyword_extraction", seed=seed)
+        obs = result.observation
+        jd = obs.job_description
+
+        prompt = f"""Read this job description and extract skills.
+
+JD:
+{jd}
+
+Return ONLY valid JSON:
+{{
+  "hard_skills": ["list of tools, languages, platforms"],
+  "soft_skills": ["list of soft skills"],
+  "experience_years": <integer>
+}}"""
+
+        raw = llm(prompt)
+        parsed = _parse_json(raw)
+
+        action = ResumeAction(
+            action_type="extract_keywords",
+            hard_skills=parsed.get("hard_skills", []),
+            soft_skills=parsed.get("soft_skills", []),
+            experience_years=parsed.get("experience_years", 0),
+        )
+        step = await env.step(action)
+        score = step.reward or 0.0
+        print(f"  Score: {score:.4f}  |  {step.observation.feedback}")
+        return score
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Task 2 — Bullet Rewrite
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def run_task2(seed: int = 42) -> float:
+    print("\n── Task 2: Bullet Rewrite ──")
+    async with ResumeEnv(base_url=ENV_BASE_URL) as env:
+        result = await env.reset(task_id="task2_bullet_rewrite", seed=seed)
+        obs = result.observation
+        original = obs.resume_snapshot.get("original_bullet", "")
+        jd = obs.job_description
+
+        prompt = f"""Rewrite this resume bullet to maximise ATS match.
+
+Job Description:
+{jd}
+
+Original bullet:
+"{original}"
+
+Rules:
+- Start with a strong action verb (Developed, Built, Implemented, etc.)
+- Include at least one number or percentage
+- Use keywords from the JD
+- Keep it to 1-2 lines
+
+Return ONLY the rewritten bullet, no quotes or explanation."""
+
+        rewritten = llm(prompt).strip('"').strip()
+
+        action = ResumeAction(
+            action_type="rewrite_bullet",
+            rewritten_bullet=rewritten,
+        )
+        step = await env.step(action)
+        score = step.reward or 0.0
+        print(f"  Score: {score:.4f}  |  {step.observation.feedback}")
+        print(f"  Rewritten: {rewritten[:100]}...")
+        return score
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Task 3 — Full Application Pack
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def run_task3(seed: int = 42) -> float:
+    print("\n── Task 3: Full Application Pack ──")
+    STEP_SEQUENCE = [
+        "rewrite_summary",
+        "rewrite_experience",
+        "update_skills",
+        "write_cover_letter",
+    ]
+
+    async with ResumeEnv(base_url=ENV_BASE_URL) as env:
+        result = await env.reset(task_id="task3_full_application", seed=seed)
+        obs = result.observation
+        jd = obs.job_description
+        resume = obs.resume_snapshot
+        final_score = 0.0
+
+        for step_name in STEP_SEQUENCE:
+            if step_name == "rewrite_summary":
+                prompt = (
+                    f"Rewrite this professional summary to match the JD.\n"
+                    f"Current: {resume.get('summary', '')}\nJD: {jd}\n"
+                    f"Return ONLY the new 2-sentence summary."
+                )
+            elif step_name == "rewrite_experience":
+                bullets = "\n".join(
+                    b for e in resume.get("experience", []) for b in e.get("bullets", [])
+                )
+                prompt = (
+                    f"Rewrite these bullets for ATS. JD keywords: {jd[:200]}\n"
+                    f"Bullets:\n{bullets}\n"
+                    f"Return one bullet per line, each starting with a strong verb and including a number."
+                )
+            elif step_name == "update_skills":
+                prompt = (
+                    f"Update skills for this JD. Current: {resume.get('skills', [])}\n"
+                    f"JD: {jd[:200]}\n"
+                    f"Return ONLY a comma-separated list of skills."
+                )
+            elif step_name == "write_cover_letter":
+                prompt = (
+                    f"Write a 3-paragraph cover letter for this role.\n"
+                    f"Summary: {resume.get('summary', '')}\n"
+                    f"Skills: {resume.get('skills', [])}\nJD: {jd}\n"
+                    f"Start with 'Dear Hiring Manager,' and end with 'Sincerely, [Applicant]'."
+                )
+
+            content = llm(prompt).strip()
+            action = ResumeAction(action_type=step_name, content=content)
+            step_result = await env.step(action)
+            obs = step_result.observation
+            final_score = step_result.reward or 0.0
+            resume = obs.resume_snapshot
+            print(f"  [{step_name}] reward={final_score:.4f}")
+
+            if obs.done:
+                break
+
+        print(f"  Final Score: {final_score:.4f}  |  {obs.feedback}")
+        return final_score
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Main
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def main():
+    print(f"ResumeEnv Inference  —  model={MODEL_NAME}  server={ENV_BASE_URL}")
+    print("=" * 60)
+
+    t1 = await run_task1(seed=42)
+    t2 = await run_task2(seed=42)
+    t3 = await run_task3(seed=42)
+
+    overall = round((t1 + t2 + t3) / 3, 4)
+
+    print("\n" + "=" * 60)
+    print("RESULTS")
+    print(f"  Task 1  Keyword Extraction   : {t1:.4f}")
+    print(f"  Task 2  Bullet Rewrite       : {t2:.4f}")
+    print(f"  Task 3  Full Application     : {t3:.4f}")
+    print(f"  ─────────────────────────────────")
+    print(f"  Overall Average              : {overall:.4f}")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

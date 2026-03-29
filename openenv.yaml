@@ -1,0 +1,9 @@
+# openenv.yaml
+name: resume-env
+version: "1.0.0"
+description: >
+  ResumeEnv: AI agent reads a job description and a candidate resume,
+  then optimizes the resume and cover letter to maximize ATS match rate.
+  3 tasks — easy, medium, hard.
+sdk: docker
+app_port: 8000

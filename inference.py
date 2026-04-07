@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-# inference.py  ← MUST be in project root (not a subfolder)
+# inference.py — LLM baseline agent for ResumeEnv.
 #
-# LLM-powered baseline agent for ResumeEnv.
-# Uses OpenAI-compatible client — works with OpenAI, Together, Groq, Ollama, vLLM etc.
-#
-# Environment variables:
-#   OPENAI_API_KEY   — your API key (required)
-#   API_BASE_URL     — base URL (default: https://api.openai.com/v1)
-#   MODEL_NAME       — model to use  (default: gpt-4o-mini)
-#   ENV_BASE_URL     — running ResumeEnv server (default: http://localhost:8000)
+# Required environment variables:
+#   HF_TOKEN       Your Hugging Face / API key
+#   API_BASE_URL   The API endpoint for the LLM
+#   MODEL_NAME     The model identifier to use
+#   ENV_BASE_URL   Running ResumeEnv server (default: http://localhost:8000)
 #
 # Usage:
 #   python inference.py
@@ -24,17 +21,15 @@ from client import ResumeEnv
 from models import ResumeAction
 
 # ── Config from environment variables ────────────────────────────────────────
-# HF_TOKEN is the canonical key name per hackathon requirements.
-# Fall back to OPENAI_API_KEY for local dev convenience.
-API_KEY      = os.environ.get("HF_TOKEN") or os.environ.get("OPENAI_API_KEY", "")
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME   = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
+MODEL_NAME   = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+HF_TOKEN     = os.getenv("HF_TOKEN")
 ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:8000")
 
 
 def llm(prompt: str) -> str:
     """Single LLM call using OpenAI-compatible client."""
-    client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
+    client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
     resp = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],

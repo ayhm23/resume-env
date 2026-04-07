@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from openenv.core.env_server import create_app
 
 from models import ResumeAction, ResumeObservation
-from server.resume_environment import ResumeEnvironment, PAIRS, _ats_score, _f1, _jaccard
+from server.resume_environment import ResumeEnvironment, PAIRS, _ats_score, _f1, _jaccard, _clamp
 
 # Pass the class (factory), not an instance — required by HTTPEnvServer
 app: FastAPI = create_app(ResumeEnvironment, ResumeAction, ResumeObservation)
@@ -159,7 +159,7 @@ def run_baseline():
     soft_jac = _jaccard(["communication", "collaboration"], pair["gt_soft"])
     baseline_years = max(int(pair["gt_years"]) - 1, 1)  # baseline guesses 1 year short
     exp_score = max(0.0, 1.0 - abs(baseline_years - pair["gt_years"]) / max(pair["gt_years"], 1))
-    t1_score = round(0.60 * hard_f1 + 0.25 * soft_jac + 0.15 * exp_score, 4)
+    t1_score = _clamp(round(0.60 * hard_f1 + 0.25 * soft_jac + 0.15 * exp_score, 4))
     results["task1_keyword_extraction"] = {
         "score": t1_score,
         "hard_f1": hard_f1, "soft_jaccard": soft_jac,
@@ -176,7 +176,7 @@ def run_baseline():
     ats_a = _ats_score(rewritten, jd)
     headroom = max(1.0 - ats_b, 0.01)
     ats_d = min(max((ats_a - ats_b) / headroom, 0.0), 1.0)
-    t2_score = round(0.40 * ats_d + 0.30 * 0.5 + 0.30 * 1.0, 4)   # quality=1 (has number + verb)
+    t2_score = _clamp(round(0.40 * ats_d + 0.30 * 0.5 + 0.30 * 1.0, 4))   # quality=1 (has number + verb)
     results["task2_bullet_rewrite"] = {
         "score": t2_score,
         "ats_before": ats_b, "ats_after": ats_a,
@@ -197,7 +197,7 @@ def run_baseline():
     cov_r = _ats_score(cover, jd)
     kw_c  = _kw_coverage(resume_text + " " + cover, pair["gt_hard"])
     fmt   = 1.0  # base resume has all sections
-    t3_score = round(0.35 * ats3 + 0.25 * cov_r + 0.25 * kw_c + 0.15 * fmt, 4)
+    t3_score = _clamp(round(0.35 * ats3 + 0.25 * cov_r + 0.25 * kw_c + 0.15 * fmt, 4))
     results["task3_full_application"] = {
         "score": t3_score,
         "resume_ats": ats3, "cover_relevance": cov_r, "keyword_coverage": kw_c,

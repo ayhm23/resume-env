@@ -319,6 +319,18 @@ def _kw_coverage(text: str, keywords: List[str]) -> float:
     return round(hits / len(keywords), 4)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SCORE CLAMP — validator requires strictly 0 < score < 1
+# ─────────────────────────────────────────────────────────────────────────────
+
+_EPS = 0.001
+
+
+def _clamp(score: float) -> float:
+    """Ensure score is strictly in (0, 1) as required by the hackathon validator."""
+    return round(max(_EPS, min(1.0 - _EPS, float(score))), 4)
+
+
 def _resume_to_text(r: Dict) -> str:
     parts = [r.get("summary", "")]
     for exp in r.get("experience", []):
@@ -437,7 +449,7 @@ class ResumeEnvironment(Environment):
         exp_diff  = abs(action.experience_years - gt["gt_years"])
         exp_score = max(0.0, 1.0 - exp_diff / max(gt["gt_years"], 1))
 
-        score = round(0.60 * hard_f1 + 0.25 * soft_jac + 0.15 * exp_score, 4)
+        score = _clamp(0.60 * hard_f1 + 0.25 * soft_jac + 0.15 * exp_score)
 
         self._last_grader = {
             "hard_skill_f1": hard_f1,
@@ -482,7 +494,7 @@ class ResumeEnvironment(Environment):
             0.5 * float(_starts_strong_verb(rewritten)), 4
         )
 
-        score = round(0.40 * ats_delta + 0.30 * semantic + 0.30 * quality, 4)
+        score = _clamp(0.40 * ats_delta + 0.30 * semantic + 0.30 * quality)
 
         self._last_grader = {
             "ats_before": ats_before,
@@ -517,12 +529,12 @@ class ResumeEnvironment(Environment):
         partial = 0.0
         if action.action_type == "rewrite_summary":
             self._t3_resume["summary"] = action.content
-            partial = round(_ats_score(action.content, jd) * 0.20, 4)
+            partial = _clamp(_ats_score(action.content, jd) * 0.20)
 
         elif action.action_type == "rewrite_experience":
             bullets = [b.strip() for b in action.content.split("\n") if b.strip()]
             self._t3_resume["experience"] = [{"title": "Rewritten", "bullets": bullets}]
-            partial = round(_ats_score(action.content, jd) * 0.25, 4)
+            partial = _clamp(_ats_score(action.content, jd) * 0.25)
 
         elif action.action_type == "update_skills":
             self._t3_resume["skills"] = [s.strip() for s in action.content.split(",") if s.strip()]
@@ -530,7 +542,7 @@ class ResumeEnvironment(Environment):
 
         elif action.action_type == "write_cover_letter":
             self._t3_cover = action.content
-            partial = round(_ats_score(action.content, jd) * 0.15, 4)
+            partial = _clamp(_ats_score(action.content, jd) * 0.15)
 
         self._t3_step_idx += 1
         done = self._t3_step_idx >= len(TASK3_SEQUENCE)
@@ -551,7 +563,7 @@ class ResumeEnvironment(Environment):
                 any(g in self._t3_cover.lower() for g in ["dear", "hello", "hi"]),
             ]) / 5.0
 
-            score = round(0.35 * ats + 0.25 * cov_r + 0.25 * kw_c + 0.15 * fmt, 4)
+            score = _clamp(0.35 * ats + 0.25 * cov_r + 0.25 * kw_c + 0.15 * fmt)
 
             self._last_grader = {
                 "resume_ats": ats,

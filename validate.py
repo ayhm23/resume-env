@@ -361,7 +361,8 @@ def test_inference_location():
     if exists:
         with open(path, encoding="utf-8") as f:
             content = f.read()
-        check("  uses OPENAI_API_KEY", "OPENAI_API_KEY" in content)
+        check("  uses HF_TOKEN or OPENAI_API_KEY",
+              "HF_TOKEN" in content or "OPENAI_API_KEY" in content)
         check("  uses MODEL_NAME",     "MODEL_NAME" in content)
         check("  uses API_BASE_URL",   "API_BASE_URL" in content)
 

@@ -1,20 +1,23 @@
 # server/app.py
 # FastAPI app for ResumeEnv.
-# Uses openenv's create_web_interface_app (exposes /reset /step /state /health /ws /web).
+# Uses openenv's create_app (exposes /reset /step /state /health /ws /web).
 # Adds 3 required hackathon endpoints: /tasks /grader /baseline
 #
-# IMPORTANT: Pass the Environment CLASS (not an instance) to create_web_interface_app.
+# IMPORTANT: Pass the Environment CLASS (not an instance) to create_app.
 # The framework creates a fresh instance per WebSocket session via the factory pattern.
 
 import re
-from fastapi import FastAPI
-from openenv.core.env_server import create_web_interface_app
+from fastapi import FastAPI, Request
+from openenv.core.env_server import create_app
 
 from models import ResumeAction, ResumeObservation
 from server.resume_environment import ResumeEnvironment, PAIRS, _ats_score, _f1, _jaccard
 
 # Pass the class (factory), not an instance — required by HTTPEnvServer
-app: FastAPI = create_web_interface_app(ResumeEnvironment, ResumeAction, ResumeObservation)
+app: FastAPI = create_app(ResumeEnvironment, ResumeAction, ResumeObservation)
+
+# Module-level tracker for last HTTP /step reward — used by /grader endpoint.
+_last_step_reward: float = 0.5
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -74,14 +77,41 @@ def get_tasks():
 # /grader — return last episode grader scores
 # ─────────────────────────────────────────────────────────────────────────────
 
+@app.middleware("http")
+async def _track_step_reward(request: Request, call_next):
+    """Capture reward from POST /step responses so /grader can return final_score."""
+    global _last_step_reward
+    response = await call_next(request)
+    if request.url.path == "/step" and request.method == "POST":
+        import json
+        from starlette.responses import Response
+        body = b""
+        async for chunk in response.body_iterator:
+            body += chunk
+        try:
+            data = json.loads(body)
+            r = data.get("reward")
+            if r is not None:
+                _last_step_reward = float(r)
+        except Exception:
+            pass
+        return Response(
+            content=body,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+    return response
+
+
 @app.get("/grader")
 def get_grader():
     """
-    Grader details are embedded in every step() observation.
-    Check the returned observation's `metadata` field and `current_score` field.
-    This endpoint explains the grading schema for each task.
+    Grader details and last episode final_score.
+    full grader breakdown is also returned inline in each /step observation's metadata.
     """
     return {
+        "final_score": round(_last_step_reward, 4),
         "info": "Grader results are returned inline in each /step observation.",
         "fields": {
             "observation.reward": "Float in [0.0, 1.0] — step reward",

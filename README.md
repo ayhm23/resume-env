@@ -25,7 +25,7 @@ An OpenEnv-compliant environment where an AI agent reads a job description and a
 
 ```bash
 # Install client
-pip install git+https://huggingface.co/spaces/your-username/resume-env
+pip install git+https://huggingface.co/spaces/ayhm23/resume-env
 
 # Run locally with Docker
 docker build -t resume-env .
@@ -39,7 +39,7 @@ import asyncio
 from resume_env import ResumeEnv, ResumeAction
 
 async def main():
-    async with ResumeEnv(base_url="https://your-username-resume-env.hf.space") as env:
+    async with ResumeEnv(base_url="https://ayhm23-resume-env.hf.space") as env:
 
         # Task 1 — Keyword Extraction
         result = await env.reset(task_id="task1_keyword_extraction")
@@ -205,7 +205,7 @@ resume_env/
 
 ```bash
 cd resume_env
-openenv push --repo-id your-username/resume-env
+openenv push --repo-id ayhm23/resume-env
 ```
 
 ---

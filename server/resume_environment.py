@@ -395,7 +395,23 @@ class ResumeEnvironment(Environment):
 
     # ── step ─────────────────────────────────────────────────────────────────
 
+    # Mapping from action_type → task_id for stateless HTTP /step calls.
+    _ACTION_TO_TASK = {
+        "extract_keywords":  "task1_keyword_extraction",
+        "rewrite_bullet":    "task2_bullet_rewrite",
+        "rewrite_summary":   "task3_full_application",
+        "rewrite_experience":"task3_full_application",
+        "update_skills":     "task3_full_application",
+        "write_cover_letter":"task3_full_application",
+    }
+
     def step(self, action: ResumeAction) -> ResumeObservation:
+        # HTTP /step creates a fresh env with no prior reset().  Auto-initialise
+        # using the action_type so stateless calls still return valid rewards.
+        if not self._task_id:
+            inferred = self._ACTION_TO_TASK.get(action.action_type, "task1_keyword_extraction")
+            self.reset(task_id=inferred)
+
         self._state.step_count += 1
 
         if self._task_id == "task1_keyword_extraction":

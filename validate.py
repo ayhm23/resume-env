@@ -97,14 +97,14 @@ def test_step(base_url: str):
         httpx.post(f"{base_url}/reset", json={"task_id": "task1_keyword_extraction"}, timeout=15)
         r = httpx.post(
             f"{base_url}/step",
-            json={
+            json={"action": {
                 "action_type": "extract_keywords",
                 "hard_skills": ["SQL", "Python"],
                 "soft_skills": ["communication"],
                 "experience_years": 3,
                 "rewritten_bullet": "",
                 "content": "",
-            },
+            }},
             timeout=15,
         )
         ok = r.status_code == 200
@@ -122,14 +122,14 @@ def test_step(base_url: str):
         httpx.post(f"{base_url}/reset", json={"task_id": "task2_bullet_rewrite"}, timeout=15)
         r = httpx.post(
             f"{base_url}/step",
-            json={
+            json={"action": {
                 "action_type": "rewrite_bullet",
                 "hard_skills": [],
                 "soft_skills": [],
                 "experience_years": 0,
                 "rewritten_bullet": "Developed SQL dashboards tracking 15 KPIs, reducing reporting time by 30%.",
                 "content": "",
-            },
+            }},
             timeout=15,
         )
         ok = r.status_code == 200
@@ -154,13 +154,13 @@ def test_step(base_url: str):
         for action_type, content in steps:
             r = httpx.post(
                 f"{base_url}/step",
-                json={
+                json={"action": {
                     "action_type": action_type,
                     "hard_skills": [], "soft_skills": [],
                     "experience_years": 0,
                     "rewritten_bullet": "",
                     "content": content,
-                },
+                }},
                 timeout=15,
             )
             ok = r.status_code == 200
@@ -227,13 +227,13 @@ def test_grader(base_url: str):
         httpx.post(f"{base_url}/reset", json={"task_id": "task1_keyword_extraction"}, timeout=15)
         httpx.post(
             f"{base_url}/step",
-            json={
+            json={"action": {
                 "action_type": "extract_keywords",
                 "hard_skills": ["SQL", "Python", "Tableau"],
                 "soft_skills": ["communication"],
                 "experience_years": 5,
                 "rewritten_bullet": "", "content": "",
-            },
+            }},
             timeout=15,
         )
         r = httpx.get(f"{base_url}/grader", timeout=15)
@@ -300,7 +300,7 @@ def test_grader_ranges(base_url: str):
     for task_id, action in task_actions.items():
         try:
             httpx.post(f"{base_url}/reset", json={"task_id": task_id}, timeout=15)
-            r = httpx.post(f"{base_url}/step", json=action, timeout=15)
+            r = httpx.post(f"{base_url}/step", json={"action": action}, timeout=15)
             data = r.json()
             reward = data.get("reward", -1)
             check(f"  {task_id} reward in [0.0, 1.0]",
@@ -359,7 +359,7 @@ def test_inference_location():
     exists = os.path.exists(path)
     check("inference.py exists at PROJECT ROOT (not a subfolder)", exists)
     if exists:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read()
         check("  uses OPENAI_API_KEY", "OPENAI_API_KEY" in content)
         check("  uses MODEL_NAME",     "MODEL_NAME" in content)
@@ -375,7 +375,7 @@ def test_deps():
     import os
     path = os.path.join(os.path.dirname(__file__), "server", "requirements.txt")
     if os.path.exists(path):
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read().lower()
         BANNED = ["sentence-transformers", "torch", "tensorflow", "transformers",
                   "spacy", "nltk", "gensim", "sklearn", "scikit-learn"]

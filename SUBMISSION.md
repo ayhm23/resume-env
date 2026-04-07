@@ -162,13 +162,13 @@ Overall Average              : 0.6967
 cd resume_env
 
 # Deploy (will create a new Space or update existing)
-openenv push --repo-id YOUR_HF_USERNAME/resume-env
+openenv push --repo-id ayhm23/resume-env
 ```
 
 Wait for the build to complete (~2-3 mins). Check the build logs in the HF Space UI.
 
 **Your Space URL will be:**
-`https://YOUR_HF_USERNAME-resume-env.hf.space`
+`https://ayhm23-resume-env.hf.space`
 
 ---
 
@@ -176,7 +176,7 @@ Wait for the build to complete (~2-3 mins). Check the build logs in the HF Space
 
 ```bash
 # Wait until Space is fully awake (first request can take 30-60s)
-python validate.py --base-url https://YOUR_HF_USERNAME-resume-env.hf.space
+python validate.py --base-url https://ayhm23-resume-env.hf.space
 ```
 
 All 12 checks must pass. The automated hackathon checker runs the same logic.
@@ -187,7 +187,7 @@ All 12 checks must pass. The automated hackathon checker runs the same logic.
 
 Go to the hackathon dashboard and paste:
 ```
-https://YOUR_HF_USERNAME-resume-env.hf.space
+https://ayhm23-resume-env.hf.space
 ```
 
 **Check before submitting:**

@@ -98,7 +98,7 @@ async def run_task2(seed: int = 42) -> float:
         original = obs.resume_snapshot.get("original_bullet", "")
         jd = obs.job_description
 
-        prompt = f"""Rewrite this resume bullet to maximise ATS match.
+        prompt = f"""Enhance this resume bullet to better match the job description.
 
 Job Description:
 {jd}
@@ -107,12 +107,13 @@ Original bullet:
 "{original}"
 
 Rules:
-- Start with a strong action verb (Developed, Built, Implemented, etc.)
-- Include at least one number or percentage
-- Use keywords from the JD
-- Keep it to 1-2 lines
+- KEEP the same activity and topic from the original bullet — do not change what the person did
+- Naturally weave in relevant keywords and tools from the JD
+- Start with a strong past-tense action verb (Managed, Developed, Drove, Optimised, etc.)
+- Include at least one specific number or percentage (e.g. "increased X by 30%")
+- Keep it to 1 sentence
 
-Return ONLY the rewritten bullet, no quotes or explanation."""
+Return ONLY the rewritten bullet with no quotes, labels, or explanation."""
 
         rewritten = llm(prompt).strip('"').strip()
 

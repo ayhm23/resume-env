@@ -54,15 +54,29 @@ def _parse_json(raw: str) -> dict:
 # Task 1 — Keyword Extraction
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _log(tag: str, payload: dict) -> None:
-    """Emit a structured log line as required by the hackathon evaluator."""
-    print(f"[{tag}] " + json.dumps(payload))
+BENCHMARK = "resume-env"
+SUCCESS_THRESHOLD = 0.1
+
+
+def log_start(task: str, model: str) -> None:
+    print(f"[START] task={task} env={BENCHMARK} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error=None) -> None:
+    error_val = error if error else "null"
+    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_val}", flush=True)
+
+
+def log_end(steps: int, score: float, rewards: list) -> None:
+    success = score >= SUCCESS_THRESHOLD
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
 
 
 async def run_task1(seed: int = 42) -> float:
     print("\n── Task 1: Keyword Extraction ──")
     task_id = "task1_keyword_extraction"
-    _log("START", {"task_id": task_id, "model": MODEL_NAME, "seed": seed})
+    log_start(task=task_id, model=MODEL_NAME)
 
     async with ResumeEnv(base_url=ENV_BASE_URL) as env:
         result = await env.reset(task_id=task_id, seed=seed)
@@ -92,8 +106,8 @@ Return ONLY valid JSON:
         )
         step = await env.step(action)
         score = step.reward or 0.0
-        _log("STEP", {"task_id": task_id, "step": 1, "action": "extract_keywords", "reward": round(score, 4), "done": True})
-        _log("END", {"task_id": task_id, "score": round(score, 4)})
+        log_step(step=1, action="extract_keywords", reward=score, done=True)
+        log_end(steps=1, score=score, rewards=[score])
         print(f"  Score: {score:.4f}  |  {step.observation.feedback}")
         return score
 
@@ -105,7 +119,7 @@ Return ONLY valid JSON:
 async def run_task2(seed: int = 42) -> float:
     print("\n── Task 2: Bullet Rewrite ──")
     task_id = "task2_bullet_rewrite"
-    _log("START", {"task_id": task_id, "model": MODEL_NAME, "seed": seed})
+    log_start(task=task_id, model=MODEL_NAME)
 
     async with ResumeEnv(base_url=ENV_BASE_URL) as env:
         result = await env.reset(task_id=task_id, seed=seed)
@@ -138,8 +152,8 @@ Return ONLY the rewritten bullet with no quotes, labels, or explanation."""
         )
         step = await env.step(action)
         score = step.reward or 0.0
-        _log("STEP", {"task_id": task_id, "step": 1, "action": "rewrite_bullet", "reward": round(score, 4), "done": True})
-        _log("END", {"task_id": task_id, "score": round(score, 4)})
+        log_step(step=1, action="rewrite_bullet", reward=score, done=True)
+        log_end(steps=1, score=score, rewards=[score])
         print(f"  Score: {score:.4f}  |  {step.observation.feedback}")
         print(f"  Rewritten: {rewritten[:100]}...")
         return score
@@ -158,7 +172,7 @@ async def run_task3(seed: int = 42) -> float:
         "update_skills",
         "write_cover_letter",
     ]
-    _log("START", {"task_id": task_id, "model": MODEL_NAME, "seed": seed})
+    log_start(task=task_id, model=MODEL_NAME)
 
     async with ResumeEnv(base_url=ENV_BASE_URL) as env:
         result = await env.reset(task_id=task_id, seed=seed)
@@ -166,6 +180,7 @@ async def run_task3(seed: int = 42) -> float:
         jd = obs.job_description
         resume = obs.resume_snapshot
         final_score = 0.0
+        rewards_t3: list = []
 
         for step_num, step_name in enumerate(STEP_SEQUENCE, start=1):
             if step_name == "rewrite_summary":
@@ -204,13 +219,14 @@ async def run_task3(seed: int = 42) -> float:
             final_score = step_result.reward or 0.0
             resume = obs.resume_snapshot
             done = obs.done
-            _log("STEP", {"task_id": task_id, "step": step_num, "action": step_name, "reward": round(final_score, 4), "done": done})
+            rewards_t3.append(final_score)
+            log_step(step=step_num, action=step_name, reward=final_score, done=done)
             print(f"  [{step_name}] reward={final_score:.4f}")
 
             if done:
                 break
 
-        _log("END", {"task_id": task_id, "score": round(final_score, 4)})
+        log_end(steps=len(rewards_t3), score=final_score, rewards=rewards_t3)
         print(f"  Final Score: {final_score:.4f}  |  {obs.feedback}")
         return final_score
 
@@ -228,8 +244,6 @@ async def main():
     t3 = await run_task3(seed=42)
 
     overall = round((t1 + t2 + t3) / 3, 4)
-
-    _log("END", {"task_id": "all", "task1": round(t1, 4), "task2": round(t2, 4), "task3": round(t3, 4), "overall": overall})
 
     print("\n" + "=" * 60)
     print("RESULTS")

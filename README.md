@@ -11,7 +11,7 @@ tags:
   - resume
   - ats
   - job-application
-license: mit
+license: bsd-3-clause
 ---
 
 # ResumeEnv 🎯

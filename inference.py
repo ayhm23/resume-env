@@ -58,15 +58,20 @@ def log_start(task: str, model: str) -> None:
     print(f"[START] task={task} env={BENCHMARK} model={model}", flush=True)
 
 
+def _clamp(v: float) -> float:
+    """Clamp to (0, 1) exclusive, safe for 2-decimal formatting."""
+    return max(0.01, min(0.99, float(v)))
+
+
 def log_step(step: int, action: str, reward: float, done: bool, error=None) -> None:
     error_val = error if error else "null"
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_val}", flush=True)
+    print(f"[STEP] step={step} action={action} reward={_clamp(reward):.2f} done={str(done).lower()} error={error_val}", flush=True)
 
 
 def log_end(steps: int, score: float, rewards: list) -> None:
-    score = max(0.001, min(0.999, float(score)))
+    score = _clamp(score)
     success = score >= SUCCESS_THRESHOLD
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    rewards_str = ",".join(f"{_clamp(r):.2f}" for r in rewards)
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
 
 

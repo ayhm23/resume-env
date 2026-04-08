@@ -447,7 +447,6 @@ def root():
 <!-- HERO -->
 <div class="hero-wrap">
   <div class="hero">
-    <div class="hero-eyebrow"><span>🏆</span> OpenEnv Hackathon&nbsp;2026</div>
     <h1>Resume Optimizer<br/><span class="grad">AI Environment</span></h1>
     <p>An AI agent reads a job description and a candidate resume, then optimises the resume and cover letter to maximise ATS match rate.</p>
     <div class="hero-btns">
@@ -551,7 +550,7 @@ def root():
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-left">ResumeEnv &copy; 2026 &mdash; OpenEnv Hackathon</div>
+  <div class="footer-left">ResumeEnv &copy; 2026</div>
   <div class="footer-links">
     <a href="/docs">Swagger</a>
     <a href="/health">Health</a>

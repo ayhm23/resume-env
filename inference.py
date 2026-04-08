@@ -22,15 +22,22 @@ from client import ResumeEnv
 from models import ResumeAction
 
 # ── Config from environment variables ────────────────────────────────────────
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
-MODEL_NAME   = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+# API_BASE_URL: set to your provider's endpoint (e.g. https://api.groq.com/openai/v1).
+#   If unset, the OpenAI SDK defaults to https://api.openai.com/v1.
+# MODEL_NAME:   set to the model identifier for your provider.
+# HF_TOKEN:     your Hugging Face / API key (also read from OPENAI_API_KEY).
+API_BASE_URL = os.getenv("API_BASE_URL")  # None → OpenAI SDK uses api.openai.com
+MODEL_NAME   = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN     = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
 ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:8000")
 
 
 def llm(prompt: str) -> str:
     """Single LLM call using OpenAI-compatible client."""
-    client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
+    kwargs = {"api_key": HF_TOKEN}
+    if API_BASE_URL:
+        kwargs["base_url"] = API_BASE_URL
+    client = OpenAI(**kwargs)
     resp = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],

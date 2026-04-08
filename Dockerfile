@@ -1,4 +1,6 @@
-FROM ghcr.io/meta-pytorch/openenv-base:latest
+# Prefer the optimised base image; fall back to python:3.11-slim if unavailable.
+# To use the fallback, change the line below to: FROM python:3.11-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 

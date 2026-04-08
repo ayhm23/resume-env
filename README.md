@@ -157,6 +157,37 @@ Every observation (`ResumeObservation`) contains:
 
 ---
 
+## Environment Variables
+
+`inference.py` reads these from the shell environment (or a `.env` file):
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `HF_TOKEN` | **Yes** | Your API key (HF or Groq or OpenAI) | `hf_...` / `gsk_...` / `sk-...` |
+| `API_BASE_URL` | No | LLM provider endpoint. **If unset**, the OpenAI SDK defaults to `https://api.openai.com/v1` | `https://api.groq.com/openai/v1` |
+| `MODEL_NAME` | No | Model identifier for the chosen provider. Default: `gpt-4o-mini` | `llama-3.3-70b-versatile` |
+| `ENV_BASE_URL` | No | Running ResumeEnv server. Default: `http://localhost:8000` | `https://ayhm23-resume-env.hf.space` |
+
+> **Note:** `OPENAI_API_KEY` is also accepted as an alias for `HF_TOKEN`.
+
+### Using Groq
+```bash
+export HF_TOKEN=gsk_...
+export API_BASE_URL=https://api.groq.com/openai/v1
+export MODEL_NAME=llama-3.3-70b-versatile
+python inference.py
+```
+
+### Using OpenAI
+```bash
+export HF_TOKEN=sk-...
+# API_BASE_URL not needed — SDK defaults to api.openai.com
+export MODEL_NAME=gpt-4o-mini
+python inference.py
+```
+
+---
+
 ## Baseline
 
 ```bash

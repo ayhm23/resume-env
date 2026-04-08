@@ -32,63 +32,263 @@ def root():
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ResumeEnv</title>
+  <title>ResumeEnv — OpenEnv</title>
   <style>
-    body{font-family:system-ui,sans-serif;max-width:820px;margin:40px auto;padding:0 20px;background:#f8fafc;color:#1e293b}
-    h1{font-size:2rem;margin-bottom:4px}
-    .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px}
-    .v{background:#d1fae5;color:#065f46}.s{background:#dbeafe;color:#1e40af}
-    p{color:#475569;margin:6px 0 20px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0}
-    .card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    .card h3{margin:0 0 6px;font-size:1rem}
-    .card p{margin:0;font-size:.85rem;color:#64748b}
-    .diff{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:8px;float:right;margin-top:-2px}
-    .easy{background:#d1fae5;color:#065f46}.medium{background:#fef9c3;color:#854d0e}.hard{background:#fee2e2;color:#991b1b}
-    table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    th{background:#1e293b;color:#fff;padding:10px 14px;text-align:left;font-size:.8rem}
-    td{padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:.85rem;font-family:monospace}
-    tr:last-child td{border-bottom:none}
-    .tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.75rem;background:#e0f2fe;color:#0369a1;font-family:system-ui}
-    a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
-    .footer{margin-top:40px;font-size:.8rem;color:#94a3b8;text-align:center}
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#f0f4ff;--surface:#fff;--border:#e2e8f0;
+      --text:#1e293b;--muted:#64748b;--accent:#4f46e5;
+      --accent-light:#eef2ff;--green:#16a34a;--green-bg:#dcfce7;
+      --yellow:#92400e;--yellow-bg:#fef9c3;--red:#991b1b;--red-bg:#fee2e2;
+    }
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── NAV ── */
+    nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:var(--accent)}
+    .logo span{font-size:1.4rem}
+    .nav-links{display:flex;gap:4px}
+    .nav-links a{padding:6px 14px;border-radius:8px;font-size:.85rem;font-weight:500;color:var(--muted);text-decoration:none;transition:background .15s,color .15s}
+    .nav-links a:hover{background:var(--accent-light);color:var(--accent)}
+    #status-pill{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:20px;background:#f1f5f9;color:var(--muted)}
+    #status-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;transition:background .3s}
+    #status-dot.ok{background:var(--green);box-shadow:0 0 0 3px #bbf7d0}
+    #status-dot.err{background:#dc2626;box-shadow:0 0 0 3px #fecaca}
+
+    /* ── HERO ── */
+    .hero{max-width:860px;margin:56px auto 0;padding:48px 24px 32px;text-align:center}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-light);color:var(--accent);font-size:.78rem;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:20px;letter-spacing:.04em}
+    .hero h1{font-size:2.6rem;font-weight:800;line-height:1.15;color:var(--text);margin-bottom:16px}
+    .hero h1 span{background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{font-size:1.05rem;color:var(--muted);max-width:560px;margin:0 auto 32px;line-height:1.6}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn{padding:10px 24px;border-radius:10px;font-size:.9rem;font-weight:600;text-decoration:none;transition:transform .15s,box-shadow .15s,opacity .15s;display:inline-flex;align-items:center;gap:7px}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.25)}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-secondary{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+
+    /* ── STATS BAR ── */
+    .stats{max-width:860px;margin:0 auto;padding:0 24px}
+    .stats-inner{display:flex;gap:0;background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+    .stat{flex:1;padding:20px 24px;text-align:center;border-right:1px solid var(--border)}
+    .stat:last-child{border-right:none}
+    .stat-val{font-size:1.6rem;font-weight:800;color:var(--accent)}
+    .stat-label{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+    /* ── TASKS ── */
+    .section{max-width:860px;margin:48px auto 0;padding:0 24px}
+    .section-title{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+    .tasks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+    .task-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;transition:box-shadow .2s,transform .2s;cursor:default}
+    .task-card:hover{box-shadow:0 6px 24px rgba(79,70,229,.1);transform:translateY(-2px)}
+    .task-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .task-num{font-size:.75rem;font-weight:700;color:var(--accent);background:var(--accent-light);padding:2px 9px;border-radius:6px}
+    .diff-badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:6px}
+    .easy{background:var(--green-bg);color:var(--green)}.medium{background:var(--yellow-bg);color:var(--yellow)}.hard{background:var(--red-bg);color:var(--red)}
+    .task-card h3{font-size:.97rem;font-weight:700;margin-bottom:6px}
+    .task-card p{font-size:.83rem;color:var(--muted);line-height:1.5;margin-bottom:12px}
+    .task-meta{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-chip{font-size:.7rem;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--muted);font-family:monospace}
+
+    /* ── ENDPOINTS ── */
+    .endpoint-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+    .endpoint-table thead tr{background:#1e293b}
+    .endpoint-table th{padding:11px 16px;text-align:left;font-size:.78rem;font-weight:600;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase}
+    .endpoint-table td{padding:10px 16px;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
+    .endpoint-table tr:last-child td{border-bottom:none}
+    .endpoint-table tr:hover td{background:#f8fafc}
+    .method{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:5px;font-family:monospace;letter-spacing:.04em}
+    .get{background:#dbeafe;color:#1d4ed8}.post{background:#d1fae5;color:#065f46}.ws{background:#f3e8ff;color:#6b21a8}
+    .path{font-family:'Fira Code',monospace;font-size:.84rem;color:var(--accent)}
+    .copy-btn{float:right;font-size:.7rem;padding:2px 9px;border:1px solid var(--border);border-radius:5px;background:#f8fafc;color:var(--muted);cursor:pointer;transition:background .15s}
+    .copy-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+
+    /* ── QUICK START ── */
+    .code-block{background:#0f172a;border-radius:12px;padding:20px 22px;font-family:'Fira Code',monospace;font-size:.82rem;line-height:1.7;color:#e2e8f0;position:relative;overflow-x:auto}
+    .code-block .c{color:#64748b}.code-block .k{color:#7dd3fc}.code-block .s{color:#86efac}.code-block .v{color:#f9a8d4}
+    .copy-code{position:absolute;top:12px;right:14px;font-size:.72rem;padding:3px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;cursor:pointer;font-family:system-ui;transition:background .15s}
+    .copy-code:hover{background:#334155;color:#e2e8f0}
+
+    /* ── FOOTER ── */
+    footer{max-width:860px;margin:56px auto 40px;padding:24px 24px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap}
+    .footer-left{font-size:.82rem;color:var(--muted)}
+    .footer-links{display:flex;gap:16px}
+    .footer-links a{font-size:.82rem;color:var(--muted);text-decoration:none}
+    .footer-links a:hover{color:var(--accent)}
   </style>
 </head>
 <body>
-  <h1>ResumeEnv <span class="badge v">v1.0.0</span><span class="badge s">OpenEnv</span></h1>
-  <p>AI agent environment — optimise resumes &amp; cover letters to maximise ATS match rate across 3 tasks.</p>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Task 1 <span class="diff easy">easy</span></h3>
-      <p><strong>Keyword Extraction</strong><br/>Extract hard skills, soft skills &amp; experience years from a job description.</p>
+<!-- NAV -->
+<nav>
+  <div class="logo"><span>📄</span> ResumeEnv</div>
+  <div class="nav-links">
+    <a href="#tasks">Tasks</a>
+    <a href="#api">API</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="/docs">Swagger</a>
+  </div>
+  <div id="status-pill">
+    <div id="status-dot"></div>
+    <span id="status-text">Checking…</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">🏆 OpenEnv Hackathon 2026</div>
+  <h1>Resume Optimizer<br/><span>AI Environment</span></h1>
+  <p>An AI agent reads a job description and a candidate resume, then optimises the resume and cover letter to maximise ATS match rate.</p>
+  <div class="hero-btns">
+    <a href="/docs" class="btn btn-primary">⚡ Try the API</a>
+    <a href="#quickstart" class="btn btn-secondary">📋 Quick Start</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-val">3</div><div class="stat-label">Tasks</div></div>
+    <div class="stat"><div class="stat-val">0–1</div><div class="stat-label">Reward Range</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Max Steps (Task 3)</div></div>
+    <div class="stat"><div class="stat-val" style="color:#16a34a" id="baseline-score">—</div><div class="stat-label">Baseline Avg Score</div></div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="section" id="tasks">
+  <div class="section-title">Tasks</div>
+  <div class="tasks">
+    <div class="task-card">
+      <div class="task-card-top"><span class="task-num">Task 1</span><span class="diff-badge easy">easy</span></div>
+      <h3>Keyword Extraction</h3>
+      <p>Extract hard skills, soft skills, and required experience years from a job description.</p>
+      <div class="task-meta">
+        <span class="meta-chip">max_steps: 1</span>
+        <span class="meta-chip">extract_keywords</span>
+      </div>
     </div>
-    <div class="card">
-      <h3>Task 2 <span class="diff medium">medium</span></h3>
-      <p><strong>Bullet Rewrite</strong><br/>Rewrite a resume bullet to maximise ATS score with numbers &amp; action verbs.</p>
+    <div class="task-card">
+      <div class="task-card-top"><span class="task-num">Task 2</span><span class="diff-badge medium">medium</span></div>
+      <h3>Bullet Rewrite</h3>
+      <p>Rewrite a resume bullet to maximise ATS score — add numbers and strong action verbs.</p>
+      <div class="task-meta">
+        <span class="meta-chip">max_steps: 1</span>
+        <span class="meta-chip">rewrite_bullet</span>
+      </div>
     </div>
-    <div class="card">
-      <h3>Task 3 <span class="diff hard">hard</span></h3>
-      <p><strong>Full Application Pack</strong><br/>4-step episode: rewrite summary → experience → skills → cover letter.</p>
+    <div class="task-card">
+      <div class="task-card-top"><span class="task-num">Task 3</span><span class="diff-badge hard">hard</span></div>
+      <h3>Full Application Pack</h3>
+      <p>4-step episode: rewrite summary → experience → skills → write full cover letter.</p>
+      <div class="task-meta">
+        <span class="meta-chip">max_steps: 4</span>
+        <span class="meta-chip">rewrite_summary</span>
+        <span class="meta-chip">write_cover_letter</span>
+      </div>
     </div>
   </div>
+</div>
 
-  <h2 style="margin-bottom:12px">API Endpoints</h2>
-  <table>
-    <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-    <tr><td><span class="tag">GET</span></td><td>/health</td><td>Liveness check</td></tr>
-    <tr><td><span class="tag">GET</span></td><td>/tasks</td><td>List all tasks &amp; action schemas</td></tr>
-    <tr><td><span class="tag">POST</span></td><td>/reset</td><td>Start a new episode — body: <code>{"task_id": "..."}</code></td></tr>
-    <tr><td><span class="tag">POST</span></td><td>/step</td><td>Submit an action, receive reward &amp; observation</td></tr>
-    <tr><td><span class="tag">GET</span></td><td>/state</td><td>Current episode state</td></tr>
-    <tr><td><span class="tag">GET</span></td><td>/grader</td><td>Last episode grader scores</td></tr>
-    <tr><td><span class="tag">POST</span></td><td>/baseline</td><td>Run deterministic rule-based baseline</td></tr>
-    <tr><td><span class="tag">GET</span></td><td>/docs</td><td>Interactive Swagger UI</td></tr>
+<!-- API -->
+<div class="section" id="api">
+  <div class="section-title">API Endpoints</div>
+  <table class="endpoint-table">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td><a class="path" href="/health" target="_blank">/health</a></td><td>Liveness check — returns <code>{"status":"healthy"}</code></td></tr>
+      <tr><td><span class="method get">GET</span></td><td><a class="path" href="/tasks" target="_blank">/tasks</a></td><td>List all tasks with action schemas</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><span class="path">/reset</span></td><td>Start a new episode — body: <code>{"task_id":"task1_keyword_extraction"}</code></td></tr>
+      <tr><td><span class="method post">POST</span></td><td><span class="path">/step</span></td><td>Submit an action, receive reward &amp; observation</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><a class="path" href="/state" target="_blank">/state</a></td><td>Current episode state (step_count, episode_id)</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><a class="path" href="/grader" target="_blank">/grader</a></td><td>Last episode grader scores</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><span class="path">/baseline</span></td><td>Run deterministic rule-based baseline on all 3 tasks</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><a class="path" href="/docs" target="_blank">/docs</a></td><td>Interactive Swagger UI</td></tr>
+    </tbody>
   </table>
+</div>
 
-  <div class="footer">
-    ResumeEnv &mdash; <a href="/docs">Swagger docs</a> &mdash; <a href="/health">Health</a> &mdash; <a href="/tasks">Tasks</a>
+<!-- QUICK START -->
+<div class="section" id="quickstart">
+  <div class="section-title">Quick Start</div>
+  <div class="code-block" id="code1">
+    <button class="copy-code" onclick="copyCode('code1')">Copy</button>
+<span class="c"># 1. Health check</span>
+<span class="k">curl</span> <span class="s">https://ayhm23-resume-env.hf.space/health</span>
+
+<span class="c"># 2. Start Task 1 episode</span>
+<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/reset</span> \\
+  -H <span class="v">"Content-Type: application/json"</span> \\
+  -d <span class="v">'{"task_id":"task1_keyword_extraction"}'</span>
+
+<span class="c"># 3. Submit action</span>
+<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/step</span> \\
+  -H <span class="v">"Content-Type: application/json"</span> \\
+  -d <span class="v">'{"action":{"action_type":"extract_keywords","hard_skills":["SQL","Python","Tableau"],"soft_skills":["communication"],"experience_years":5}}'</span>
+
+<span class="c"># 4. Python inference (requires HF_TOKEN and MODEL_NAME env vars)</span>
+<span class="k">python</span> inference.py
   </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">ResumeEnv &copy; 2026 &mdash; OpenEnv Hackathon</div>
+  <div class="footer-links">
+    <a href="/docs">Swagger</a>
+    <a href="/health">Health</a>
+    <a href="/tasks">Tasks</a>
+    <a href="/grader">Grader</a>
+  </div>
+</footer>
+
+<script>
+  // Live health check
+  async function checkHealth() {
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    try {
+      const r = await fetch('/health');
+      if (r.ok) {
+        dot.className = 'ok'; txt.textContent = 'Live';
+      } else {
+        dot.className = 'err'; txt.textContent = 'Error ' + r.status;
+      }
+    } catch {
+      dot.className = 'err'; txt.textContent = 'Offline';
+    }
+  }
+
+  // Fetch baseline score
+  async function fetchBaseline() {
+    try {
+      const r = await fetch('/baseline', {method:'POST'});
+      if (r.ok) {
+        const d = await r.json();
+        const el = document.getElementById('baseline-score');
+        if (d.overall_average_score !== undefined) {
+          el.textContent = d.overall_average_score.toFixed(2);
+        }
+      }
+    } catch {}
+  }
+
+  // Copy code block text
+  function copyCode(id) {
+    const el = document.getElementById(id);
+    const text = el.innerText.replace(/^Copy\\n/, '');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = el.querySelector('.copy-code');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  checkHealth();
+  fetchBaseline();
+  setInterval(checkHealth, 30000);
+</script>
 </body>
 </html>"""
 

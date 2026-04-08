@@ -8,6 +8,7 @@
 
 import re
 from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from openenv.core.env_server import create_app
 
 from models import ResumeAction, ResumeObservation
@@ -18,6 +19,78 @@ app: FastAPI = create_app(ResumeEnvironment, ResumeAction, ResumeObservation)
 
 # Module-level tracker for last HTTP /step reward — used by /grader endpoint.
 _last_step_reward: float = 0.5
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# / — Landing page UI
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ResumeEnv</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:820px;margin:40px auto;padding:0 20px;background:#f8fafc;color:#1e293b}
+    h1{font-size:2rem;margin-bottom:4px}
+    .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px}
+    .v{background:#d1fae5;color:#065f46}.s{background:#dbeafe;color:#1e40af}
+    p{color:#475569;margin:6px 0 20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0}
+    .card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    .card h3{margin:0 0 6px;font-size:1rem}
+    .card p{margin:0;font-size:.85rem;color:#64748b}
+    .diff{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:8px;float:right;margin-top:-2px}
+    .easy{background:#d1fae5;color:#065f46}.medium{background:#fef9c3;color:#854d0e}.hard{background:#fee2e2;color:#991b1b}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    th{background:#1e293b;color:#fff;padding:10px 14px;text-align:left;font-size:.8rem}
+    td{padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:.85rem;font-family:monospace}
+    tr:last-child td{border-bottom:none}
+    .tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.75rem;background:#e0f2fe;color:#0369a1;font-family:system-ui}
+    a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+    .footer{margin-top:40px;font-size:.8rem;color:#94a3b8;text-align:center}
+  </style>
+</head>
+<body>
+  <h1>ResumeEnv <span class="badge v">v1.0.0</span><span class="badge s">OpenEnv</span></h1>
+  <p>AI agent environment — optimise resumes &amp; cover letters to maximise ATS match rate across 3 tasks.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Task 1 <span class="diff easy">easy</span></h3>
+      <p><strong>Keyword Extraction</strong><br/>Extract hard skills, soft skills &amp; experience years from a job description.</p>
+    </div>
+    <div class="card">
+      <h3>Task 2 <span class="diff medium">medium</span></h3>
+      <p><strong>Bullet Rewrite</strong><br/>Rewrite a resume bullet to maximise ATS score with numbers &amp; action verbs.</p>
+    </div>
+    <div class="card">
+      <h3>Task 3 <span class="diff hard">hard</span></h3>
+      <p><strong>Full Application Pack</strong><br/>4-step episode: rewrite summary → experience → skills → cover letter.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-bottom:12px">API Endpoints</h2>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+    <tr><td><span class="tag">GET</span></td><td>/health</td><td>Liveness check</td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/tasks</td><td>List all tasks &amp; action schemas</td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/reset</td><td>Start a new episode — body: <code>{"task_id": "..."}</code></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/step</td><td>Submit an action, receive reward &amp; observation</td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/state</td><td>Current episode state</td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/grader</td><td>Last episode grader scores</td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/baseline</td><td>Run deterministic rule-based baseline</td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/docs</td><td>Interactive Swagger UI</td></tr>
+  </table>
+
+  <div class="footer">
+    ResumeEnv &mdash; <a href="/docs">Swagger docs</a> &mdash; <a href="/health">Health</a> &mdash; <a href="/tasks">Tasks</a>
+  </div>
+</body>
+</html>"""
 
 
 # ─────────────────────────────────────────────────────────────────────────────

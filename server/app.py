@@ -33,100 +33,409 @@ def root():
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ResumeEnv — OpenEnv</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --bg:#f0f4ff;--surface:#fff;--border:#e2e8f0;
-      --text:#1e293b;--muted:#64748b;--accent:#4f46e5;
-      --accent-light:#eef2ff;--green:#16a34a;--green-bg:#dcfce7;
-      --yellow:#92400e;--yellow-bg:#fef9c3;--red:#991b1b;--red-bg:#fee2e2;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0a0a0f;
+      --bg2:         #0e0e16;
+      --surface:     #111118;
+      --surface2:    #18181f;
+      --border:      rgba(255,255,255,0.07);
+      --border-hi:   rgba(255,255,255,0.13);
+      --text:        #f0f0f5;
+      --muted:       #7a7a8c;
+      --muted2:      #4a4a5a;
+      --accent:      #7c6dfa;
+      --accent2:     #a78bfa;
+      --accent-glow: rgba(124,109,250,0.25);
+      --green:       #34d399;
+      --green-bg:    rgba(52,211,153,0.1);
+      --green-border:rgba(52,211,153,0.25);
+      --yellow:      #fbbf24;
+      --yellow-bg:   rgba(251,191,36,0.1);
+      --yellow-border:rgba(251,191,36,0.25);
+      --red:         #f87171;
+      --red-bg:      rgba(248,113,113,0.1);
+      --red-border:  rgba(248,113,113,0.25);
+      --radius-sm:   8px;
+      --radius:      12px;
+      --radius-lg:   16px;
     }
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
     /* ── NAV ── */
-    nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:var(--accent)}
-    .logo span{font-size:1.4rem}
-    .nav-links{display:flex;gap:4px}
-    .nav-links a{padding:6px 14px;border-radius:8px;font-size:.85rem;font-weight:500;color:var(--muted);text-decoration:none;transition:background .15s,color .15s}
-    .nav-links a:hover{background:var(--accent-light);color:var(--accent)}
-    #status-pill{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:20px;background:#f1f5f9;color:var(--muted)}
-    #status-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;transition:background .3s}
-    #status-dot.ok{background:var(--green);box-shadow:0 0 0 3px #bbf7d0}
-    #status-dot.err{background:#dc2626;box-shadow:0 0 0 3px #fecaca}
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(10,10,15,0.75);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 9px;
+      font-size: .95rem; font-weight: 700; letter-spacing: -.01em;
+      color: var(--text); text-decoration: none;
+    }
+    .logo-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, #7c6dfa, #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .nav-links { display: flex; gap: 2px; }
+    .nav-links a {
+      padding: 5px 13px; border-radius: var(--radius-sm);
+      font-size: .82rem; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .nav-links a:hover { background: var(--surface2); color: var(--text); }
+    #status-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 13px; border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: .75rem; font-weight: 600; color: var(--muted);
+    }
+    #status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted2);
+      transition: background .4s, box-shadow .4s;
+    }
+    #status-dot.ok  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    #status-dot.err { background: var(--red);   box-shadow: 0 0 8px var(--red); }
 
     /* ── HERO ── */
-    .hero{max-width:860px;margin:56px auto 0;padding:48px 24px 32px;text-align:center}
-    .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-light);color:var(--accent);font-size:.78rem;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:20px;letter-spacing:.04em}
-    .hero h1{font-size:2.6rem;font-weight:800;line-height:1.15;color:var(--text);margin-bottom:16px}
-    .hero h1 span{background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .hero p{font-size:1.05rem;color:var(--muted);max-width:560px;margin:0 auto 32px;line-height:1.6}
-    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn{padding:10px 24px;border-radius:10px;font-size:.9rem;font-weight:600;text-decoration:none;transition:transform .15s,box-shadow .15s,opacity .15s;display:inline-flex;align-items:center;gap:7px}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.25)}
-    .btn-primary{background:var(--accent);color:#fff}
-    .btn-secondary{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+    .hero-wrap {
+      position: relative; overflow: hidden;
+      padding: 100px 24px 80px;
+    }
+    /* Grid pattern background */
+    .hero-wrap::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 40%, transparent 100%);
+    }
+    /* Ambient glow */
+    .hero-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 50% 45% at 50% 30%, rgba(124,109,250,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero {
+      max-width: 720px; margin: 0 auto;
+      text-align: center; position: relative; z-index: 1;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border-hi);
+      color: var(--accent2);
+      font-size: .73rem; font-weight: 600;
+      padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 28px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .hero-eyebrow span { font-size: .85rem; }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -.03em;
+      margin-bottom: 20px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, #a78bfa 0%, #7c6dfa 40%, #60a5fa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.05rem; color: var(--muted);
+      max-width: 520px; margin: 0 auto 36px; line-height: 1.65;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 22px; border-radius: var(--radius-sm);
+      font-size: .88rem; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+      transition: all .2s cubic-bezier(.34,1.56,.64,1);
+      letter-spacing: -.01em;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 0 0 var(--accent-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px var(--accent-glow);
+      background: var(--accent2);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border-hi);
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      background: rgba(124,109,250,0.08);
+      color: var(--accent2);
+    }
 
     /* ── STATS BAR ── */
-    .stats{max-width:860px;margin:0 auto;padding:0 24px}
-    .stats-inner{display:flex;gap:0;background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-    .stat{flex:1;padding:20px 24px;text-align:center;border-right:1px solid var(--border)}
-    .stat:last-child{border-right:none}
-    .stat-val{font-size:1.6rem;font-weight:800;color:var(--accent)}
-    .stat-label{font-size:.78rem;color:var(--muted);margin-top:2px}
+    .stats { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+    .stats-inner {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .stat {
+      padding: 24px 20px; text-align: center;
+      border-right: 1px solid var(--border);
+      transition: background .2s;
+    }
+    .stat:last-child { border-right: none; }
+    .stat:hover { background: var(--surface2); }
+    .stat-val {
+      font-size: 1.75rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent2), #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; letter-spacing: -.03em;
+    }
+    .stat-val.live { background: none; -webkit-text-fill-color: var(--green); }
+    .stat-label { font-size: .72rem; color: var(--muted); margin-top: 4px; letter-spacing: .03em; text-transform: uppercase; }
 
-    /* ── TASKS ── */
-    .section{max-width:860px;margin:48px auto 0;padding:0 24px}
-    .section-title{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-    .tasks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-    .task-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;transition:box-shadow .2s,transform .2s;cursor:default}
-    .task-card:hover{box-shadow:0 6px 24px rgba(79,70,229,.1);transform:translateY(-2px)}
-    .task-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .task-num{font-size:.75rem;font-weight:700;color:var(--accent);background:var(--accent-light);padding:2px 9px;border-radius:6px}
-    .diff-badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:6px}
-    .easy{background:var(--green-bg);color:var(--green)}.medium{background:var(--yellow-bg);color:var(--yellow)}.hard{background:var(--red-bg);color:var(--red)}
-    .task-card h3{font-size:.97rem;font-weight:700;margin-bottom:6px}
-    .task-card p{font-size:.83rem;color:var(--muted);line-height:1.5;margin-bottom:12px}
-    .task-meta{display:flex;gap:8px;flex-wrap:wrap}
-    .meta-chip{font-size:.7rem;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--muted);font-family:monospace}
+    /* ── SECTIONS ── */
+    .section { max-width: 860px; margin: 72px auto 0; padding: 0 24px; }
+    .section-title {
+      font-size: .7rem; font-weight: 700;
+      color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border-hi), transparent);
+    }
 
-    /* ── ENDPOINTS ── */
-    .endpoint-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
-    .endpoint-table thead tr{background:#1e293b}
-    .endpoint-table th{padding:11px 16px;text-align:left;font-size:.78rem;font-weight:600;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase}
-    .endpoint-table td{padding:10px 16px;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
-    .endpoint-table tr:last-child td{border-bottom:none}
-    .endpoint-table tr:hover td{background:#f8fafc}
-    .method{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:5px;font-family:monospace;letter-spacing:.04em}
-    .get{background:#dbeafe;color:#1d4ed8}.post{background:#d1fae5;color:#065f46}.ws{background:#f3e8ff;color:#6b21a8}
-    .path{font-family:'Fira Code',monospace;font-size:.84rem;color:var(--accent)}
-    .copy-btn{float:right;font-size:.7rem;padding:2px 9px;border:1px solid var(--border);border-radius:5px;background:#f8fafc;color:var(--muted);cursor:pointer;transition:background .15s}
-    .copy-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+    /* ── TASK CARDS ── */
+    .tasks { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 16px; }
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      cursor: default;
+      transition: border-color .25s, box-shadow .25s, transform .25s;
+      position: relative; overflow: hidden;
+    }
+    .task-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 0% 0%, var(--accent-glow) 0%, transparent 60%);
+      opacity: 0; transition: opacity .3s;
+    }
+    .task-card:hover::before { opacity: 1; }
+    .task-card:hover {
+      border-color: var(--border-hi);
+      box-shadow: 0 0 0 1px var(--border-hi), 0 16px 40px rgba(0,0,0,.4);
+      transform: translateY(-3px);
+    }
+    .task-card-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .task-num {
+      font-size: .7rem; font-weight: 700;
+      color: var(--accent2); letter-spacing: .06em; text-transform: uppercase;
+    }
+    .diff-badge {
+      font-size: .67rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: .04em;
+    }
+    .easy   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+    .medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+    .hard   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+    .task-card h3 {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 8px; letter-spacing: -.01em;
+    }
+    .task-card p { font-size: .83rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+    .task-meta { display: flex; gap: 7px; flex-wrap: wrap; }
+    .meta-chip {
+      font-family: 'Fira Code', monospace;
+      font-size: .67rem; font-weight: 500;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 5px; padding: 2px 8px; color: var(--muted);
+    }
 
-    /* ── QUICK START ── */
-    .code-block{background:#0f172a;border-radius:12px;padding:20px 22px;font-family:'Fira Code',monospace;font-size:.82rem;line-height:1.7;color:#e2e8f0;position:relative;overflow-x:auto}
-    .code-block .c{color:#64748b}.code-block .k{color:#7dd3fc}.code-block .s{color:#86efac}.code-block .v{color:#f9a8d4}
-    .copy-code{position:absolute;top:12px;right:14px;font-size:.72rem;padding:3px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;cursor:pointer;font-family:system-ui;transition:background .15s}
-    .copy-code:hover{background:#334155;color:#e2e8f0}
+    /* ── ENDPOINT TABLE ── */
+    .endpoint-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .endpoint-table thead { background: var(--surface2); }
+    .endpoint-table th {
+      padding: 12px 18px; text-align: left;
+      font-size: .67rem; font-weight: 600;
+      color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .endpoint-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: .83rem; vertical-align: middle;
+      color: var(--muted);
+      transition: background .15s;
+    }
+    .endpoint-table tr:last-child td { border-bottom: none; }
+    .endpoint-table tbody tr:hover td { background: var(--surface2); }
+    .method {
+      font-family: 'Fira Code', monospace;
+      font-size: .68rem; font-weight: 600;
+      padding: 3px 9px; border-radius: 5px;
+      letter-spacing: .04em; display: inline-block;
+    }
+    .get  { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+    .post { background: var(--green-bg);        color: var(--green); border: 1px solid var(--green-border); }
+    .path {
+      font-family: 'Fira Code', monospace;
+      font-size: .83rem; color: var(--accent2);
+      text-decoration: none;
+    }
+    .path:hover { text-decoration: underline; }
+
+    /* ── CODE BLOCK ── */
+    .code-wrap {
+      position: relative;
+      background: #080810;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang {
+      font-family: 'Fira Code', monospace;
+      font-size: .7rem; color: var(--muted); letter-spacing: .06em;
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dots span {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--muted2);
+    }
+    .code-dots span:nth-child(1) { background: #ff5f57; }
+    .code-dots span:nth-child(2) { background: #febc2e; }
+    .code-dots span:nth-child(3) { background: #28c840; }
+    .code-block {
+      padding: 22px 22px 22px;
+      font-family: 'Fira Code', monospace;
+      font-size: .8rem; line-height: 1.8;
+      color: #c9d1d9;
+      overflow-x: auto;
+      position: relative;
+    }
+    /* Syntax colours */
+    .code-block .c  { color: #4a4a64; }
+    .code-block .k  { color: #79c0ff; }
+    .code-block .s  { color: #a5d6ff; }
+    .code-block .v  { color: #ff7b72; }
+    .code-block .p  { color: #d2a8ff; }
+    .copy-code {
+      font-family: 'Inter', sans-serif;
+      font-size: .7rem; font-weight: 500;
+      padding: 4px 12px;
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .copy-code:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .copy-code.copied { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
 
     /* ── FOOTER ── */
-    footer{max-width:860px;margin:56px auto 40px;padding:24px 24px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap}
-    .footer-left{font-size:.82rem;color:var(--muted)}
-    .footer-links{display:flex;gap:16px}
-    .footer-links a{font-size:.82rem;color:var(--muted);text-decoration:none}
-    .footer-links a:hover{color:var(--accent)}
+    footer {
+      max-width: 860px; margin: 80px auto 48px;
+      padding: 28px 24px 0;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-left { font-size: .78rem; color: var(--muted2); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      font-size: .78rem; color: var(--muted);
+      text-decoration: none; transition: color .15s;
+    }
+    .footer-links a:hover { color: var(--accent2); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .hero-wrap { padding: 70px 16px 60px; }
+      .stats-inner { grid-template-columns: repeat(2,1fr); }
+      .stat { border-bottom: 1px solid var(--border); }
+      .section { padding: 0 16px; }
+      footer { padding: 24px 16px 0; }
+    }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <div class="logo"><span>📄</span> ResumeEnv</div>
+  <a class="logo" href="/">
+    <div class="logo-icon">📄</div>
+    ResumeEnv
+  </a>
   <div class="nav-links">
     <a href="#tasks">Tasks</a>
     <a href="#api">API</a>
-    <a href="#quickstart">Quick Start</a>
+    <a href="#quickstart">Quick&nbsp;Start</a>
     <a href="/docs">Swagger</a>
   </div>
   <div id="status-pill">
@@ -136,13 +445,15 @@ def root():
 </nav>
 
 <!-- HERO -->
-<div class="hero">
-  <div class="hero-eyebrow">🏆 OpenEnv Hackathon 2026</div>
-  <h1>Resume Optimizer<br/><span>AI Environment</span></h1>
-  <p>An AI agent reads a job description and a candidate resume, then optimises the resume and cover letter to maximise ATS match rate.</p>
-  <div class="hero-btns">
-    <a href="/docs" class="btn btn-primary">⚡ Try the API</a>
-    <a href="#quickstart" class="btn btn-secondary">📋 Quick Start</a>
+<div class="hero-wrap">
+  <div class="hero">
+    <div class="hero-eyebrow"><span>🏆</span> OpenEnv Hackathon&nbsp;2026</div>
+    <h1>Resume Optimizer<br/><span class="grad">AI Environment</span></h1>
+    <p>An AI agent reads a job description and a candidate resume, then optimises the resume and cover letter to maximise ATS match rate.</p>
+    <div class="hero-btns">
+      <a href="/docs" class="btn btn-primary">⚡&nbsp;&nbsp;Try the API</a>
+      <a href="#quickstart" class="btn btn-secondary">📋&nbsp;&nbsp;Quick Start</a>
+    </div>
   </div>
 </div>
 
@@ -150,9 +461,9 @@ def root():
 <div class="stats">
   <div class="stats-inner">
     <div class="stat"><div class="stat-val">3</div><div class="stat-label">Tasks</div></div>
-    <div class="stat"><div class="stat-val">0–1</div><div class="stat-label">Reward Range</div></div>
-    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Max Steps (Task 3)</div></div>
-    <div class="stat"><div class="stat-val" style="color:#16a34a" id="baseline-score">—</div><div class="stat-label">Baseline Avg Score</div></div>
+    <div class="stat"><div class="stat-val">0 – 1</div><div class="stat-label">Reward Range</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Max Steps</div></div>
+    <div class="stat"><div class="stat-val live" id="baseline-score">—</div><div class="stat-label">Baseline Score</div></div>
   </div>
 </div>
 
@@ -161,27 +472,27 @@ def root():
   <div class="section-title">Tasks</div>
   <div class="tasks">
     <div class="task-card">
-      <div class="task-card-top"><span class="task-num">Task 1</span><span class="diff-badge easy">easy</span></div>
+      <div class="task-card-top"><span class="task-num">Task&nbsp;01</span><span class="diff-badge easy">Easy</span></div>
       <h3>Keyword Extraction</h3>
-      <p>Extract hard skills, soft skills, and required experience years from a job description.</p>
+      <p>Extract hard skills, soft skills, and required experience years directly from a job description.</p>
       <div class="task-meta">
         <span class="meta-chip">max_steps: 1</span>
         <span class="meta-chip">extract_keywords</span>
       </div>
     </div>
     <div class="task-card">
-      <div class="task-card-top"><span class="task-num">Task 2</span><span class="diff-badge medium">medium</span></div>
+      <div class="task-card-top"><span class="task-num">Task&nbsp;02</span><span class="diff-badge medium">Medium</span></div>
       <h3>Bullet Rewrite</h3>
-      <p>Rewrite a resume bullet to maximise ATS score — add numbers and strong action verbs.</p>
+      <p>Rewrite a resume bullet to maximise ATS score — strong action verbs and quantified impact required.</p>
       <div class="task-meta">
         <span class="meta-chip">max_steps: 1</span>
         <span class="meta-chip">rewrite_bullet</span>
       </div>
     </div>
     <div class="task-card">
-      <div class="task-card-top"><span class="task-num">Task 3</span><span class="diff-badge hard">hard</span></div>
+      <div class="task-card-top"><span class="task-num">Task&nbsp;03</span><span class="diff-badge hard">Hard</span></div>
       <h3>Full Application Pack</h3>
-      <p>4-step episode: rewrite summary → experience → skills → write full cover letter.</p>
+      <p>4-step multi-turn episode: rewrite summary → experience → skills → write a full tailored cover letter.</p>
       <div class="task-meta">
         <span class="meta-chip">max_steps: 4</span>
         <span class="meta-chip">rewrite_summary</span>
@@ -195,7 +506,9 @@ def root():
 <div class="section" id="api">
   <div class="section-title">API Endpoints</div>
   <table class="endpoint-table">
-    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <thead>
+      <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+    </thead>
     <tbody>
       <tr><td><span class="method get">GET</span></td><td><a class="path" href="/health" target="_blank">/health</a></td><td>Liveness check — returns <code>{"status":"healthy"}</code></td></tr>
       <tr><td><span class="method get">GET</span></td><td><a class="path" href="/tasks" target="_blank">/tasks</a></td><td>List all tasks with action schemas</td></tr>
@@ -212,23 +525,27 @@ def root():
 <!-- QUICK START -->
 <div class="section" id="quickstart">
   <div class="section-title">Quick Start</div>
-  <div class="code-block" id="code1">
-    <button class="copy-code" onclick="copyCode('code1')">Copy</button>
-<span class="c"># 1. Health check</span>
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">bash</span>
+      <button class="copy-code" id="copy-btn" onclick="copyCode('code1')">Copy</button>
+    </div>
+    <div class="code-block" id="code1"><span class="c"># 1. Health check</span>
 <span class="k">curl</span> <span class="s">https://ayhm23-resume-env.hf.space/health</span>
 
 <span class="c"># 2. Start Task 1 episode</span>
-<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/reset</span> \\
-  -H <span class="v">"Content-Type: application/json"</span> \\
-  -d <span class="v">'{"task_id":"task1_keyword_extraction"}'</span>
+<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/reset</span> \
+  -H <span class="v">"Content-Type: application/json"</span> \
+  -d <span class="p">'{"task_id":"task1_keyword_extraction"}'</span>
 
 <span class="c"># 3. Submit action</span>
-<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/step</span> \\
-  -H <span class="v">"Content-Type: application/json"</span> \\
-  -d <span class="v">'{"action":{"action_type":"extract_keywords","hard_skills":["SQL","Python","Tableau"],"soft_skills":["communication"],"experience_years":5}}'</span>
+<span class="k">curl</span> -X POST <span class="s">https://ayhm23-resume-env.hf.space/step</span> \
+  -H <span class="v">"Content-Type: application/json"</span> \
+  -d <span class="p">'{"action":{"action_type":"extract_keywords","hard_skills":["SQL","Python","Tableau"],"soft_skills":["communication"],"experience_years":5}}'</span>
 
-<span class="c"># 4. Python inference (requires HF_TOKEN and MODEL_NAME env vars)</span>
-<span class="k">python</span> inference.py
+<span class="c"># 4. Python inference agent</span>
+<span class="k">python</span> inference.py</div>
   </div>
 </div>
 
@@ -277,11 +594,12 @@ def root():
   // Copy code block text
   function copyCode(id) {
     const el = document.getElementById(id);
-    const text = el.innerText.replace(/^Copy\\n/, '');
+    const text = el.innerText;
     navigator.clipboard.writeText(text).then(() => {
-      const btn = el.querySelector('.copy-code');
+      const btn = document.getElementById('copy-btn');
       btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy', 2000);
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
     });
   }
 
